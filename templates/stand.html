@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>JSON Input Form</title>
+</head>
+<body>
+    <h2>Configuration Input</h2>
+    <textarea id="config_text" name="config_text" rows="10" cols="50" required>
+{
+    "mounts": [
+        [50, 50]
+    ],
+    "angle": 60.0,
+    "screw_size": 2.4,
+    "edge_padding": 5.0,
+    "padding": 10.0,
+    "thickness": 3.0
+}
+    </textarea><br><br>
+    <input id="submit_button" type="submit" value="Submit"><br><br>
+    <h2>STL Viewer</h2>
+    <iframe id="vs_iframe" src="https://www.viewstl.com/?embedded" style="border:0;margin:0;width:100%;min-height:500px;"></iframe>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/110/three.min.js"></script>
+    <script>
+        document.getElementById("submit_button").addEventListener("click", function (event) {
+            console.log("submitting json to backend");
+        
+            event.preventDefault();
+            const configData = document.getElementById("config_text").value;
+        
+            // Create a JSON object from the textarea value
+            try {
+                const jsonData = JSON.parse(configData);
+        
+                // Make a POST request to your FastAPI endpoint
+                fetch("/backend/stand", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(jsonData),
+                })
+                .then(response => {
+                    if (response.status === 200) {
+                        // If the response is successful, check the Content-Disposition header
+                        const contentDisposition = response.headers.get("Content-Disposition");
+                        if (contentDisposition) {
+                            console.log(contentDisposition)
+                            const filenameMatch = /filename="([^"]+)"/.exec(contentDisposition);
+                            console.log(filenameMatch)
+                            if (filenameMatch && filenameMatch[1]) {
+                                console.log("filename!")
+
+                                // Extract the filename from the header
+                                const filename = filenameMatch[1];
+        
+                                // Save the file using Blob and a download link
+                                response.blob().then(blob => {
+                                    const url = window.URL.createObjectURL(blob);
+                                    const a = document.createElement("a");
+                                    a.href = url;
+                                    a.download = filename;
+                                    document.body.appendChild(a);
+                                    a.click();
+                                    window.URL.revokeObjectURL(url);
+                                });
+
+                                // const filename_no_ext = filename.substring(0, filename.lastIndexOf("."));
+                                // const server = window.location.hostname;
+                                // const port = window.location.port;
+                                // const url = "http://" + server + ":" + port + "/models/" + filename_no_ext + "&local";
+                            }
+                        }
+                    } else {
+                        console.error("Server returned an error:", response.statusText);
+                        // Handle errors
+                    }
+                })
+                .catch(error => {
+                    console.error(error);
+                    // Handle errors
+                });
+            } catch (error) {
+                console.error("Invalid JSON data:", error);
+                // Handle invalid JSON data
+            }
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "mounts": [
+    [50, 50]
+  ],
+  "angle": 60.0,
+  "screw_size": 2.4,
+  "edge_padding": 5.0,
+  "padding": 10.0,
+  "thickness": 3.0
+}
