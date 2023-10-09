@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, HTTPException, UploadFile
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from fastapi.responses import StreamingResponse
@@ -64,10 +64,6 @@ async def stand(stand: Stand):
     response.headers["Content-Disposition"] = f'filename="{stl_file.name}"'
 
     return response
-
-
-async def tile(svg_file: UploadFile = Form(...)):
-    pass
 
 
 @app.get("/models/{model_id}")
